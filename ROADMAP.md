@@ -31,7 +31,7 @@ Following along?
 
 Who else is taking this challenge?
 
-#AIAgents #GenerativeAI #MachineLearning #GoogleAI #LearningInPublic
+#GoogleAIAgentsIntensive #AIAgents #GoogleAI #LearningInPublic
 ```
 
 **Why it works:**
@@ -61,7 +61,7 @@ That's the future of development.
 
 [Repo link] | [Screenshot/video]
 
-#VibeCoding #AIAssistedCoding #ClaudeCode #DeveloperProductivity
+#GoogleAIAgentsIntensive #VibeCoding #ClaudeCode #AIAssistedDevelopment
 ```
 
 **Why it works:**
@@ -95,7 +95,7 @@ Tomorrow: [Preview next day]
 
 Following my journey? Check the repo for my notes: [link]
 
-#AIAgents #Day[N]of5 #100DaysOfCode #BuildInPublic
+#GoogleAIAgentsIntensive #AIAgents #Day[N]of5 #BuildInPublic
 ```
 
 ### Daily Topics:
@@ -118,7 +118,7 @@ Tomorrow: Multi-agent architectures (getting spicy! 🔥)
 
 Notes & code: [repo link]
 
-#AIAgents #Day1of5 #GeminiAPI #LearningInPublic
+#GoogleAIAgentsIntensive #AIAgents #Day1of5 #GeminiAPI
 ```
 
 **Pro tip for each daily post:**
@@ -161,7 +161,7 @@ Full repo with all notebooks: [link]
 
 Want to dive deeper into any of these? Let me know ⬇️
 
-#AIAgents #GenerativeAI #LessonsLearned #TechLeadership
+#GoogleAIAgentsIntensive #AIAgents #LessonsLearned #BuildInPublic
 ```
 
 ### Post #7: The Technical Deep Dive
@@ -198,7 +198,7 @@ Live demo: [if applicable]
 
 Questions? AMA in comments ⬇️
 
-#AI #MultiAgentSystems #SystemDesign #BuildInPublic
+#GoogleAIAgentsIntensive #MultiAgentSystems #AIArchitecture #GeminiAPI
 ```
 
 ---
@@ -227,7 +227,7 @@ Built this during Google's AI Agents Intensive. My notes are open-source.
 
 Bookmark this for your next hackathon 🔖
 
-#AIAgents #Tutorial #Python #GeminiAPI #LearnInPublic
+#GoogleAIAgentsIntensive #AIAgents #Tutorial #GeminiAPI
 ```
 
 ### Post #9: The Thought Leadership Piece
@@ -267,7 +267,7 @@ The future developer is an architect, not a typist.
 
 Agree? Disagree? Let's debate ⬇️
 
-#VibeCoding #AIAssistedDevelopment #FutureOfWork #DeveloperProductivity
+#GoogleAIAgentsIntensive #VibeCoding #AIAssistedDevelopment #FutureOfWork
 ```
 
 ### Post #10: The Resource List
@@ -302,7 +302,7 @@ Bookmark this thread. You'll thank me later.
 
 What resource changed YOUR agent game?
 
-#AIAgents #Resources #MachineLearning #LearnInPublic
+#GoogleAIAgentsIntensive #AIAgents #Resources #LearningInPublic
 ```
 
 ---
@@ -358,25 +358,66 @@ This is vibe coding in action."
 
 ### Hashtag Strategy
 
-**Primary (always use):**
+#### 🏷️ Primary (Official) Hashtag - ALWAYS USE THIS
+
+**#GoogleAIAgentsIntensive**
+
+This is the one Kaggle and Google are tracking across LinkedIn, Twitter (X), and Discord. It's also the one learners from the previous #GoogleGenAIIntensive are using to show continuity.
+
+#### 🌍 Supporting / Discovery Hashtags
+
+Add 2–4 of these depending on your post's focus:
+
+**General AI Course:**
+- #GoogleAI
+- #KaggleLearn
 - #AIAgents
 - #GenerativeAI
+
+**Technical Content:**
+- #AIArchitecture
+- #MultiAgentSystems
+- #GeminiAPI
+- #PromptEngineering
+
+**Personal Growth / Career:**
+- #Upskilling
+- #AIEducation
+- #ContinuousLearning
+- #LearningInPublic
 - #BuildInPublic
 
-**Secondary (rotate):**
-- #MachineLearning
-- #VibeCoding
-- #AI
-- #LearningInPublic
+**Your Signature Vibe:**
+- #VibeCoding 💫 (your unique brand tag)
+- #ClaudeCode
+- #AIAssistedDevelopment
+
+**Community Engagement:**
 - #100DaysOfCode
 - #TechTwitter
+- #MachineLearning
 
-**Specific (when relevant):**
-- #GeminiAPI
-- #ClaudeCode
-- #MultiAgentSystems
-- #LangChain
-- #PromptEngineering
+#### 📝 Hashtag Formula for Each Post
+
+**Use this structure:**
+1. Primary: #GoogleAIAgentsIntensive (always)
+2. Focus-specific: 2-3 hashtags from relevant category above
+3. Your signature: #VibeCoding (on posts showcasing Claude Code)
+4. Community: 1-2 from community engagement
+
+**Example combinations:**
+
+*For daily updates:*
+`#GoogleAIAgentsIntensive #AIAgents #LearningInPublic #BuildInPublic`
+
+*For technical deep dives:*
+`#GoogleAIAgentsIntensive #MultiAgentSystems #AIArchitecture #GeminiAPI`
+
+*For vibe coding showcases:*
+`#GoogleAIAgentsIntensive #VibeCoding #ClaudeCode #AIAssistedDevelopment`
+
+*For career/growth posts:*
+`#GoogleAIAgentsIntensive #Upskilling #AIEducation #ContinuousLearning`
 
 ---
 
@@ -445,7 +486,7 @@ To everyone who followed along - thank you 🙏
 
 What should I tackle next?
 
-#AIAgents #Journey #TechCommunity #Achievement
+#GoogleAIAgentsIntensive #AIAgents #Journey #Achievement
 ```
 
 ---
