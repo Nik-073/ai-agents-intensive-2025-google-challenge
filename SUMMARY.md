@@ -1099,6 +1099,196 @@ Extracted Memory: "User's favorite color: blue"
 
 ---
 
+### **🔍 Deep Dive: load_memory vs preload_memory**
+
+**The Critical Difference: Tool Call Visibility**
+
+When you use `load_memory`:
+```python
+# Agent with load_memory
+agent = LlmAgent(
+    instruction="Use load_memory if you need past info.",
+    tools=[load_memory]
+)
+
+# Question: "What is my favorite color?"
+# Output: WARNING: non-text parts in response: ['function_call']
+# Result: You SEE the agent calling the tool
+```
+
+When you use `preload_memory`:
+```python
+# Agent with preload_memory
+agent = LlmAgent(
+    instruction="Answer questions.",
+    tools=[preload_memory]
+)
+
+# Question: "What is my favorite color?"
+# Output: Clean response, no warnings
+# Result: Tool call is INVISIBLE - happens before agent thinks
+```
+
+**Testing Both Patterns:**
+
+```python
+# Helper to see tool calls
+async def run_session_verbose(runner, query, session_id):
+    tool_calls_detected = []
+
+    async for event in runner.run_async(...):
+        if event.content and event.content.parts:
+            for part in event.content.parts:
+                if part.function_call:
+                    tool_calls_detected.append(part.function_call.name)
+                    print(f"🔧 Tool Called: {part.function_call.name}")
+
+    if not tool_calls_detected:
+        print(f"⭕ No tools called")
+
+    return len(tool_calls_detected)
+```
+
+**Test Results:**
+
+| Pattern | Query | Tool Calls Visible? | Memory Searched? |
+|---------|-------|---------------------|------------------|
+| `load_memory` | "What is my favorite color?" | ✅ YES (`function_call` warning) | ✅ YES |
+| `load_memory` | "Tell me a joke" | ⭕ NO (no warning) | ❌ NO |
+| `preload_memory` | "What is my favorite color?" | ⭕ NO (silent) | ✅ YES |
+| `preload_memory` | "Tell me a joke" | ⭕ NO (silent) | ✅ YES (wasteful!) |
+
+**The Wasteful Pattern:**
+
+With `preload_memory`, EVERY query searches memory, even when unnecessary:
+
+```python
+# Even for this joke question, memory WAS searched!
+await run_session(preload_runner, "Tell me a joke", "joke-session")
+
+# Proof: Manual search shows what was loaded
+joke_memories = await memory_service.search_memory(
+    app_name=APP_NAME,
+    user_id=USER_ID,
+    query="Tell me a joke"
+)
+print(f"Memories loaded: {len(joke_memories.memories)}")
+# Output: 4 memories (birthday, color, etc.) - all unnecessary!
+```
+
+**When to Use Each:**
+
+| Use Case | Pattern | Why |
+|----------|---------|-----|
+| Personal assistant chatbot | `load_memory` | Most questions don't need full history - save tokens |
+| Medical diagnosis agent | `preload_memory` | MUST always know patient allergies, conditions |
+| Banking support | `preload_memory` | Must always know account restrictions |
+| General Q&A bot | `load_memory` | Mixed queries, let agent decide |
+| Compliance-critical apps | `preload_memory` | Reliability > efficiency |
+
+---
+
+### **🔬 Keyword Matching in InMemoryMemoryService**
+
+**How It Works:**
+
+`InMemoryMemoryService` uses **literal word matching** - searches for exact words in stored text.
+
+**Testing Keyword Matching:**
+
+```python
+# Memory contains:
+# 1. "My favorite color is blue-green. Can you write a Haiku about it?"
+# 2. "Ocean meets the sky, A calming, vibrant blend, Nature's peaceful hue."
+# 3. "My birthday is on March 15th."
+
+# Test different queries
+queries = [
+    "what color does the user like",  # Contains "color"
+    "haiku",                          # Exact word "haiku"
+    "age",                            # NOT in memory
+    "preferred hue"                   # Contains "hue" (from poem!)
+]
+
+for query in queries:
+    result = await memory_service.search_memory(
+        app_name=APP_NAME,
+        user_id=USER_ID,
+        query=query
+    )
+    print(f"Query '{query}': {len(result.memories)} matches")
+```
+
+**Results:**
+
+| Query | Matches? | Why? |
+|-------|----------|------|
+| "what color does the user like" | ✅ YES (2) | Word "**color**" in stored text |
+| "haiku" | ✅ YES (2) | Exact word "**haiku**" appears |
+| "age" | ❌ NO (0) | Word "age" never mentioned (only "birthday") |
+| "preferred hue" | ✅ YES (2) | Word "**hue**" in poem! ("Nature's peaceful **hue**") |
+
+**⚠️ Important Discovery:**
+
+The "preferred hue" query DOES match - but not because of semantic understanding! It matches because the agent's haiku response contains "hue". This shows:
+
+1. **Keyword matching is literal** - it finds "hue" in the poem
+2. **Not semantic** - it doesn't understand "hue" = "color"
+3. **Context doesn't matter** - finds word anywhere, even in poems
+
+**Why This Matters:**
+
+- ✅ **Prevents hallucination**: Only retrieves what actually exists
+- ❌ **Misses synonyms**: "preferred" ≠ "favorite", "hue" ≠ "color" (usually)
+- ❌ **No concept understanding**: "age" doesn't match "birthday"
+
+**Production Solution:**
+
+```python
+# InMemoryMemoryService (Learning)
+# Query: "preferred hue"
+# Result: Matches only if word "hue" appears in text
+
+# VertexAiMemoryBankService (Production - Day 5)
+# Query: "preferred hue"
+# Result: Matches "favorite color" via semantic embeddings
+# Understands meaning, not just words!
+```
+
+---
+
+### **Manual Memory Verification**
+
+**Debugging What's Actually Stored:**
+
+```python
+# Get ALL memories (empty query returns everything)
+all_memories = await memory_service.search_memory(
+    app_name=APP_NAME,
+    user_id=USER_ID,
+    query=""  # Empty = return all
+)
+
+print(f"Total memories: {len(all_memories.memories)}")
+
+for i, mem in enumerate(all_memories.memories, 1):
+    if mem.content and mem.content.parts:
+        text = mem.content.parts[0].text[:100]
+        print(f"{i}. [{mem.author}]: {text}...")
+
+# Output shows EXACTLY what's searchable
+# InMemoryMemoryService searches these exact texts
+# If your query words don't appear here, you get no results!
+```
+
+**Use Cases:**
+- Debugging why searches fail
+- Verifying memory ingestion
+- Building analytics dashboards
+- Understanding what agents can access
+
+---
+
 # 🎯 Critical Patterns & Best Practices
 
 ## Pattern 1: Tool Definition
@@ -1361,6 +1551,92 @@ Check the "status" field:
 
 ---
 
+## Mistake 7: Forgetting to Ingest Sessions to Memory
+
+```python
+# ❌ BAD - Memory service initialized but never populated
+memory_service = InMemoryMemoryService()
+runner = Runner(
+    agent=agent,
+    session_service=session_service,
+    memory_service=memory_service  # Available but empty!
+)
+
+# Agent has load_memory tool but finds nothing!
+await run_session(runner, "What's my favorite color?")
+# Result: "I don't have that information"
+
+# ✅ GOOD - Actually ingest data
+await run_session(runner, "My favorite color is blue", "session-01")
+
+# Transfer to memory!
+session = await session_service.get_session(...)
+await memory_service.add_session_to_memory(session)
+
+# Now agent can retrieve
+await run_session(runner, "What's my favorite color?")
+# Result: "Your favorite color is blue"
+```
+
+---
+
+## Mistake 8: Using preload_memory Everywhere
+
+```python
+# ❌ BAD - Wastes tokens on every single turn
+agent = LlmAgent(
+    name="general_chatbot",
+    instruction="Answer questions about anything.",
+    tools=[preload_memory]  # Searches memory even for "What's 2+2?"
+)
+
+# Every query loads all memories, even math questions!
+# Cost: HIGH, Efficiency: LOW
+
+# ✅ GOOD - Use load_memory for mixed conversations
+agent = LlmAgent(
+    name="general_chatbot",
+    instruction="Use load_memory when you need past conversation info.",
+    tools=[load_memory]  # Agent decides when to search
+)
+
+# Only searches when needed
+# Cost: LOW, Efficiency: HIGH
+
+# ✅ ALSO GOOD - Use preload_memory only when critical
+medical_agent = LlmAgent(
+    name="medical_assistant",
+    instruction="Help with medical questions.",
+    tools=[preload_memory]  # MUST always know allergies!
+)
+```
+
+---
+
+## Mistake 9: Expecting Semantic Search from InMemoryMemoryService
+
+```python
+# ❌ BAD - Expecting synonym matching
+# Memory contains: "My favorite color is blue"
+result = await memory_service.search_memory(
+    query="What is the user's preferred hue?"
+)
+# Expected: Match "color"
+# Reality: Only matches if word "hue" appears in stored text
+
+# ✅ GOOD - Understanding keyword limitations
+# Use exact words that appear in stored conversations
+result = await memory_service.search_memory(
+    query="favorite color"  # Exact words from memory
+)
+
+# ✅ PRODUCTION - Use semantic search
+# from google.adk.memory import VertexAiMemoryBankService
+# Understands "preferred hue" = "favorite color"
+```
+
+---
+
 # 🏆 Production Checklist
 
 ## Tools
@@ -1390,11 +1666,17 @@ Check the "status" field:
 - [ ] Proper error handling for session operations
 
 ## Memory
-- [ ] Memory service initialized
+- [ ] Memory service initialized and connected to Runner
 - [ ] Ingestion strategy decided (per-turn, end, periodic)
-- [ ] Retrieval pattern chosen (`load_memory` vs `preload_memory`)
+- [ ] Actually ingesting sessions with `add_session_to_memory()`
+- [ ] Retrieval pattern chosen based on use case:
+  - [ ] `load_memory` for mixed conversations (cost-efficient)
+  - [ ] `preload_memory` for mission-critical context (reliable)
+- [ ] Agent instructions mention memory tools explicitly
 - [ ] Callbacks configured for auto-save (if needed)
-- [ ] Consider managed service for production (Vertex AI)
+- [ ] Understanding keyword vs semantic search limitations
+- [ ] Manual verification queries for debugging
+- [ ] Consider managed service for production (Vertex AI Memory Bank)
 
 ## Agent Instructions
 - [ ] Reference tools by exact function name
@@ -1460,8 +1742,12 @@ _Content will be added once notebooks are available_
 | Dynamic routing | LLM Orchestrator |
 | External service integration | MCP Tools |
 | Human approval workflow | Long-Running Operations |
-| Conversation history | Sessions |
-| Cross-conversation knowledge | Memory |
+| Conversation history (short-term) | Sessions |
+| Cross-conversation knowledge (long-term) | Memory |
+| Efficient memory (agent decides) | `load_memory` |
+| Reliable memory (always loaded) | `preload_memory` |
+| Semantic search (production) | Vertex AI Memory Bank |
+| Keyword search (development) | InMemoryMemoryService |
 | Math/calculations | `BuiltInCodeExecutor` |
 | Specialist delegation | `AgentTool` |
 
@@ -1472,6 +1758,8 @@ _Content will be added once notebooks are available_
 3. **Always use** docstrings and type hints
 4. **State passing**: `output_key` → `{placeholder}`
 5. **Memory workflow**: Initialize → Ingest → Retrieve
+6. **Memory choice**: `load_memory` for efficiency, `preload_memory` for reliability
+7. **Tool call visibility**: `load_memory` shows `function_call`, `preload_memory` is silent
 
 ---
 
